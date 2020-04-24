@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +22,7 @@ import java.util.List;
 public class PhotoGalleryFragment extends Fragment {
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private int mCurrentPage;
 
     private static final String TAG = "PhotoGalleryFragment";
 
@@ -42,7 +44,27 @@ public class PhotoGalleryFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mPhotoRecyclerView = v.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mCurrentPage = 1;
         setUpAdapter();
+        mPhotoRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                if (!mPhotoRecyclerView.canScrollVertically(1) && newState==RecyclerView.SCROLL_STATE_IDLE) {
+                    if (mCurrentPage > 100) {
+                        Toast.makeText(getActivity(), R.string.end_reached_toast, Toast.LENGTH_SHORT).show();
+                    }
+                    Toast.makeText(getActivity(), R.string.loading_toast, Toast.LENGTH_SHORT).show();
+                    new FetchItemsTask().execute();
+                }
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
         return v;
     }
 
@@ -97,7 +119,9 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems();
+            List<GalleryItem> items = new FlickrFetchr().fetchItems(mCurrentPage);
+            mCurrentPage++;
+            return items;
         }
 
         @Override
