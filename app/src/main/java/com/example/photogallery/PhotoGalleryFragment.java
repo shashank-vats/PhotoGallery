@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +33,9 @@ public class PhotoGalleryFragment extends Fragment {
 
     private static final String TAG = "PhotoGalleryFragment";
 
+    public static final String CURRENT_PAGE_KEY = "currentPage";
+    public static final String LOADING_KEY = "loading";
+
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
     }
@@ -39,6 +43,12 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mCurrentPage = 1;
+        mLoading = true;
+        if (savedInstanceState != null) {
+            mLoading = savedInstanceState.getBoolean(LOADING_KEY);
+            mCurrentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY);
+        }
         setRetainInstance(true);
         new FetchItemsTask().execute();
     }
@@ -49,9 +59,15 @@ public class PhotoGalleryFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
         mPhotoRecyclerView = v.findViewById(R.id.photo_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-        mCurrentPage = 1;
-        mLoading = true;
+        mPhotoRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mPhotoRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                int width = mPhotoRecyclerView.getWidth();
+                int column_width = 200;
+                mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), width/column_width));
+            }
+        });
         setUpAdapter();
         mProgressBar = v.findViewById(R.id.progress_bar);
         mProgressBar.setIndeterminate(true);
@@ -134,14 +150,19 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
             Parcelable prevState = Objects.requireNonNull(mPhotoRecyclerView.getLayoutManager()).onSaveInstanceState();
-//            int prevPosition = ((GridLayoutManager) Objects.requireNonNull(mPhotoRecyclerView.getLayoutManager())).findFirstVisibleItemPosition();
             mItems.addAll(galleryItems);
             mCurrentPage++;
             mLoading = false;
             mProgressBar.setVisibility(View.GONE);
             setUpAdapter();
-//            mPhotoRecyclerView.scrollToPosition(prevPosition);
             mPhotoRecyclerView.getLayoutManager().onRestoreInstanceState(prevState);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(LOADING_KEY, mLoading);
+        outState.putInt(CURRENT_PAGE_KEY, mCurrentPage);
     }
 }
