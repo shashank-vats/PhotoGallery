@@ -9,14 +9,9 @@ import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.collection.LruCache;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -28,16 +23,16 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private Handler mRequestHandler;
     private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler;
-    private ThumbnailDownloadListener<T> mTThumbnailDownloadListener;
+    private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
     private LruCache<String, Bitmap> mBitmapLruCache;
     private Bitmap mBitmap;
 
     public  interface ThumbnailDownloadListener<T> {
-        void onThumbnailDownloaded(T target, Bitmap thumbnail);
+        void onThumbnailDownloaded(T position, Bitmap thumbnail);
     }
 
     public void setThumbnailDownloadListener(ThumbnailDownloadListener<T> listener) {
-        mTThumbnailDownloadListener = listener;
+        mThumbnailDownloadListener = listener;
     }
 
     public ThumbnailDownloader(Handler responseHandler) {
@@ -113,11 +108,15 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                     }
 
                     mRequestMap.remove(target);
-                    mTThumbnailDownloadListener.onThumbnailDownloaded(target, mBitmapLruCache.get(url));
+                    mThumbnailDownloadListener.onThumbnailDownloaded(target, mBitmapLruCache.get(url));
                 }
             });
         } catch (IOException ioe) {
             Log.e(TAG, "Error downloading image", ioe);
         }
+    }
+
+    public Bitmap getBitmap(String url) {
+        return mBitmapLruCache.get(url);
     }
 }
