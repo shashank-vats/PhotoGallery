@@ -145,6 +145,8 @@ public class PhotoGalleryFragment extends Fragment {
                 mFreshStart = true;
                 searchView.clearFocus();
                 searchView.onActionViewCollapsed();
+                mPhotoRecyclerView.setVisibility(View.GONE);
+                mProgressBar.setVisibility(View.VISIBLE);
                 updateItems();
                 return true;
             }
@@ -170,6 +172,8 @@ public class PhotoGalleryFragment extends Fragment {
             QueryPreferences.setStoredQuery(getActivity(), null);
             mCurrentPage = 1;
             mFreshStart = true;
+            mPhotoRecyclerView.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.VISIBLE);
             updateItems();
             return true;
         }
@@ -263,6 +267,7 @@ public class PhotoGalleryFragment extends Fragment {
                 mItems.addAll(galleryItems);
             } else {
                 mItems = galleryItems;
+                mPhotoRecyclerView.setVisibility(View.VISIBLE);
             }
             mCurrentPage++;
             mLoading = false;
