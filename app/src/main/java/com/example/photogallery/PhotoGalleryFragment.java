@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import androidx.appcompat.widget.SearchView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -132,7 +133,7 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
 
-        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final MenuItem searchItem = menu.findItem(R.id.menu_item_search);
         final SearchView searchView = (SearchView) searchItem.getActionView();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -142,6 +143,8 @@ public class PhotoGalleryFragment extends Fragment {
                 QueryPreferences.setStoredQuery(getActivity(), query);
                 mCurrentPage = 1;
                 mFreshStart = true;
+                searchView.clearFocus();
+                searchView.onActionViewCollapsed();
                 updateItems();
                 return true;
             }
