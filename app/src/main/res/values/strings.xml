@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">PhotoGallery</string>
-    <string name="loading_toast">Loading…</string>
-    <string name="end_reached_toast">You have reached the end.</string>
+    <string name="search">Search</string>
+    <string name="clear_search">Clear Search</string>
 </resources>
