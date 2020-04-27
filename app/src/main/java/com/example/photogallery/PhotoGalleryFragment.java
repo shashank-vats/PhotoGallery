@@ -1,6 +1,7 @@
 package com.example.photogallery;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -164,20 +165,34 @@ public class PhotoGalleryFragment extends Fragment {
                 searchView.setQuery(query, false);
             }
         });
+
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        if (PollService.isServiceAlarmOn(getActivity())) {
+            toggleItem.setTitle(R.string.stop_polling);
+        } else {
+            toggleItem.setTitle(R.string.start_polling);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.menu_item_clear) {
-            QueryPreferences.setStoredQuery(getActivity(), null);
-            mCurrentPage = 1;
-            mFreshStart = true;
-            mPhotoRecyclerView.setVisibility(View.GONE);
-            mProgressBar.setVisibility(View.VISIBLE);
-            updateItems();
-            return true;
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                mCurrentPage = 1;
+                mFreshStart = true;
+                mPhotoRecyclerView.setVisibility(View.GONE);
+                mProgressBar.setVisibility(View.VISIBLE);
+                updateItems();
+                return true;
+            case R.id.menu_item_toggle_polling:
+                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                Objects.requireNonNull(getActivity()).invalidateOptionsMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     private void updateItems() {
