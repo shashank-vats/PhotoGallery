@@ -1,11 +1,11 @@
 package com.example.photogallery;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
@@ -23,7 +23,6 @@ import android.widget.ProgressBar;
 import androidx.appcompat.widget.SearchView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -167,7 +166,7 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (PollService.isServiceAlarmOn(getActivity())) {
+        if (isServiceAlarmOn()) {
             toggleItem.setTitle(R.string.stop_polling);
         } else {
             toggleItem.setTitle(R.string.start_polling);
@@ -186,8 +185,17 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems();
                 return true;
             case R.id.menu_item_toggle_polling:
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    boolean shouldStartAlarm = !PollServiceNew.hasScheduled(Objects.requireNonNull(getActivity()));
+                    if (shouldStartAlarm) {
+                        PollServiceNew.schedule(getActivity());
+                    } else {
+                        PollServiceNew.cancel(getActivity());
+                    }
+                } else {
+                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                }
                 Objects.requireNonNull(getActivity()).invalidateOptionsMenu();
                 return true;
             default:
@@ -316,4 +324,11 @@ public class PhotoGalleryFragment extends Fragment {
         Log.i(TAG, "Background thread destroyed");
     }
 
+    private boolean isServiceAlarmOn() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return PollServiceNew.hasScheduled(Objects.requireNonNull(getActivity()));
+        } else {
+            return PollService.isServiceAlarmOn(getActivity());
+        }
+    }
 }
