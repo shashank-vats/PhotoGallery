@@ -1,6 +1,7 @@
 package com.example.photogallery;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
@@ -13,7 +14,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.media.RingtoneManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -27,8 +27,12 @@ public class PollServiceNew extends JobService {
 
     private static final int JOB_ID = 1;
 
+    public static final String ACTION_SHOW_NOTIFICATION = "com.example.photogallery.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE = "com.example.photogallery.PRIVATE";
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
+
     private PollTask mCurrentTask;
-    private Context mContext;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -72,27 +76,24 @@ public class PollServiceNew extends JobService {
                 Log.i(TAG, "Got an old result: " + resultId);
             } else {
                 Log.i(TAG, "Got a new result: " + resultId);
+                Resources resources = getResources();
+                Intent i = PhotoGalleryActivity.newIntent(PollServiceNew.this);
+                PendingIntent pi = PendingIntent.getActivity(PollServiceNew.this, 0, i, 0);
+
+                Notification notification = new NotificationCompat.Builder(PollServiceNew.this)
+                        .setTicker(resources.getString(R.string.new_pictures_title))
+                        .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                        .setContentTitle(resources.getString(R.string.new_pictures_title))
+                        .setContentText(resources.getString(R.string.new_pictures_text))
+                        .setContentIntent(pi)
+                        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                        .setAutoCancel(true)
+                        .build();
+
+                showBackgroundNotification(0, notification);
             }
 
-            Resources resources = getResources();
-            Intent i = PhotoGalleryActivity.newIntent(PollServiceNew.this);
-            PendingIntent pi = PendingIntent.getActivity(PollServiceNew.this, 0, i, 0);
-
-            Notification notification = new NotificationCompat.Builder(PollServiceNew.this)
-                    .setTicker(resources.getString(R.string.new_pictures_title))
-                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
-                    .setContentTitle(resources.getString(R.string.new_pictures_title))
-                    .setContentText(resources.getString(R.string.new_pictures_text))
-                    .setContentIntent(pi)
-                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                    .setAutoCancel(true)
-                    .build();
-
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(PollServiceNew.this);
-            notificationManager.notify(0, notification);
-
             QueryPreferences.setLastResultId(PollServiceNew.this, resultId);
-
             jobFinished(jobParams, false);
             return null;
         }
@@ -122,6 +123,7 @@ public class PollServiceNew extends JobService {
                 .build();
         assert scheduler != null;
         scheduler.schedule(jobInfo);
+        QueryPreferences.setAlarmOn(context, true);
     }
 
     public static void cancel(Context context) {
@@ -129,5 +131,13 @@ public class PollServiceNew extends JobService {
 
         assert scheduler != null;
         scheduler.cancel(JOB_ID);
+        QueryPreferences.setAlarmOn(context, false);
+    }
+
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+        i.putExtra(REQUEST_CODE, requestCode);
+        i.putExtra(NOTIFICATION, notification);
+        sendOrderedBroadcast(i, PERM_PRIVATE, null, null, Activity.RESULT_OK, null, null);
     }
 }

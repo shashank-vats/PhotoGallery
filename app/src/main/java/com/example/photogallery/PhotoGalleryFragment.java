@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
     private ProgressBar mProgressBar;
     private RecyclerView mPhotoRecyclerView;
     private ThumbnailDownloader<Integer> mThumbnailDownloader;
