@@ -1,6 +1,7 @@
 package com.example.photogallery;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,6 +23,11 @@ public class PhotoPageFragment extends VisibleFragment {
 
     private Uri mUri;
     private WebView mWebView;
+
+    public WebView getWebView() {
+        return mWebView;
+    }
+
     private ProgressBar mProgressBar;
 
     public static PhotoPageFragment newInstance(Uri uri) {
