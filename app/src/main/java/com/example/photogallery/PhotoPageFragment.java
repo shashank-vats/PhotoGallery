@@ -2,6 +2,8 @@ package com.example.photogallery;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -76,7 +78,19 @@ public class PhotoPageFragment extends VisibleFragment {
                 Objects.requireNonNull(activity.getSupportActionBar()).setSubtitle(title);
             }
         });
-        mWebView.setWebViewClient(new WebViewClient());
+        mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                Uri uri = Uri.parse(url);
+                String scheme = uri.getScheme();
+                assert scheme != null;
+                if (!(scheme.equals("http") || scheme.equals("https"))) {
+                    Intent i = new Intent(Intent.ACTION_VIEW, mUri);
+                    startActivity(i);
+                }
+            }
+        });
         mWebView.loadUrl(mUri.toString());
         return v;
     }
