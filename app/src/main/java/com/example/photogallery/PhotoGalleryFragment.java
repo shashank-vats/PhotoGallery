@@ -1,6 +1,7 @@
 package com.example.photogallery;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -10,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -93,9 +95,9 @@ public class PhotoGalleryFragment extends VisibleFragment {
             @Override
             public void onGlobalLayout() {
                 mPhotoRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                int width = mPhotoRecyclerView.getWidth();
-                int column_width = 200;
-                mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), width / column_width));
+                float width = convertPixelsToDp(mPhotoRecyclerView.getWidth(), Objects.requireNonNull(getActivity()));
+                int column_width = 100;
+                mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), (int)(width / column_width)));
             }
         });
         setUpAdapter();
@@ -357,5 +359,9 @@ public class PhotoGalleryFragment extends VisibleFragment {
         } else {
             return PollService.isServiceAlarmOn(getActivity());
         }
+    }
+
+    private static float convertPixelsToDp(float px, Context context){
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 }
