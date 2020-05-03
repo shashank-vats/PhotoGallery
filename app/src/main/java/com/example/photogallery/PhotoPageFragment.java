@@ -2,6 +2,7 @@ package com.example.photogallery;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -80,15 +82,34 @@ public class PhotoPageFragment extends VisibleFragment {
         });
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                Uri uri = Uri.parse(url);
-                String scheme = uri.getScheme();
-                assert scheme != null;
-                if (!(scheme.equals("http") || scheme.equals("https"))) {
-                    Intent i = new Intent(Intent.ACTION_VIEW, mUri);
-                    startActivity(i);
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String uriString = request.getUrl().toString();
+
+                // is this a play store URL?
+                String partialUrl = "/store/apps/details?id=";
+
+                if (uriString.contains(partialUrl)) {
+                    // extract the app id from the URL
+                    int pos = uriString.indexOf(partialUrl) + partialUrl.length();
+                    String appId = uriString.substring(pos);
+
+                    try {
+                        // open the google play app
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse("market://details?id=" + appId));
+                        startActivity(intent);
+                        return true;  // we overrode the url load
+
+                    } catch (ActivityNotFoundException e) {
+                        // no google play app, load URL in device browser
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + appId));
+                        startActivity(intent);
+                        return true;
+                    }
                 }
+
+                return false;  // no override, let the webview load this url
             }
         });
         mWebView.loadUrl(mUri.toString());
